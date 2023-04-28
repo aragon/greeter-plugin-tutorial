@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import {Plugin, IDAO} from "@aragon/osx/core/plugin/Plugin.sol";
 
 contract GreeterPlugin is Plugin {
-  bytes32 public constant GREET_PERMISSION_ID = keccak256("GREET-_PERMISSION");
+  bytes32 public constant GREET_PERMISSION_ID = keccak256("GREET_PERMISSION");
 
   constructor(IDAO _dao) Plugin(_dao) {}
 

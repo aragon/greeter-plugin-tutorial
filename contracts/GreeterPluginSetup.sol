@@ -36,7 +36,7 @@ contract GreeterPluginSetup is PluginSetup {
       where: _payload.plugin,
       who: _dao,
       condition: PermissionLib.NO_CONDITION,
-      permissionId: keccak256("GRANT_PERMISSION")
+      permissionId: keccak256("GREET_PERMISSION")
     });
   }
 
