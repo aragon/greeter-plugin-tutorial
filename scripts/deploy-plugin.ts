@@ -1,3 +1,7 @@
+/** 
+ * Run this contract deployment script using: 
+ * ``npx hardhat run --network goerli scripts/deploy-plugin.ts``
+ */ 
 import { ethers } from "hardhat";
 
 async function main() {
@@ -11,11 +15,10 @@ async function main() {
 
   await GreeterSetup.deployed();
 
-  console.log("GreeterSetup deployed to:", GreeterSetup.address);
+  console.log("GreeterPluginSetup deployed to:", GreeterSetup.address);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
+// Pattern enabling to use async/await everywhere and report any errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
