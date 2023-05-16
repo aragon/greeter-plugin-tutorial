@@ -1,3 +1,5 @@
+![Aragon](https://res.cloudinary.com/dacofvu8m/image/upload/v1677638385/Aragon%20CodeArena/aragon-logo-navy_gyr2qt.png)
+
 # How to build an AragonOSx Non-Upgradeable Plugin
 
 In this tutorial, we will build an AragonOSx Non-Upgradeable plugin.
@@ -25,7 +27,7 @@ curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-[Here's a tutorial](https://hardhat.org/tutorial/setting-up-the-environment) on installing this if you haven't done so alteady.
+[Here's a tutorial](https://hardhat.org/tutorial/setting-up-the-environment) on installing this if you haven't done so already.
 
 2. Next up, we want to create a Hardhat project in our terminal. This is the Solidity framework we'll use to get our project up and runing.
 
@@ -39,7 +41,7 @@ npx hardhat
 
 3. Install `@aragon/osx` package
 
-We want to install the AragonOSx contract package within our project so we can access and import them throughout our project. This should speed up development significantly, although not it's not mandatory in order to build Aragon plugins.
+We want to install the Aragon OSx contract package within our project so we can access and import them throughout our project. This should speed up development significantly, although not it's not mandatory in order to build Aragon plugins.
 
 ```bash
 npm i @aragon/osx
@@ -50,8 +52,8 @@ npm i @aragon/osx
 1. Create `GreeterPlugin` contract
 
 Plugins are composed of two key contracts:
-- The Plugin contract, containing the implementation logic for the Plugin,
-- The PluginSetup contract, containing the instructions needed to install or uninstall a Plugin into a DAO.
+- The `Plugin` contract, containing the implementation logic for the Plugin,
+- The `PluginSetup` contract, containing the instructions needed to install or uninstall a Plugin into a DAO.
 
 In this case, we will create the `GreeterPlugin.sol` contract containing the main logic for our plugin - aka returning "Hello world!" when calling on the `greet()` function. Keep in mind, that because we're importing from the `Plugin` base template in this case, we are able to tap into:
 - the `auth(PERMISSION_ID)` modifier, which checks whether the account calling on that function has the permission specified in the `auth` parameters.
@@ -183,7 +185,7 @@ npx hardhat run scripts/deploy.ts
 
 ## Deploy Plugin to Goerli
 
-Now that we know the local deployment works, we will want to deploy our pugin to Goerli testnet so we can publish it in the AragonOSx protocol to be accessed by DAOs.
+Now that we know the local deployment works, we will want to deploy our pugin to Goerli testnet so we can publish it in the Aragon OSx protocol to be accessed by DAOs.
 
 1. Firstly, let's set up the `hardhat.config.js` with Goerli environment attributes
 
@@ -226,21 +228,86 @@ module.exports = {
 };
 ```
 
-b. Once we have the Goerli environment set up, run this command in your terminal to deploy the plugin:
+2. Once we have the Goerli environment set up, run this command in your terminal to deploy the plugin:
 
 ```bash
 npx hardhat run --network goerli scripts/deploy.ts
 ```
 
-## Publish your plugin to AragonOSx
+## Publish the Plugin in Aragon OSx
 
-Now that the plugin is published on the Goerli network, we can go ahead with publishing it into
+Now that the plugin is deployed on Goerli, we can publish it into the Aragon OSx Protocol so any DAO can install it! 
 
-3. Then, go to the PluginFactory contract on Etherscan and deploy the first version of your plugin!
+Publishing a plugin into Aragon OSx means creating a `PluginRepo` instance containing the plugin's first version. As developers can deploy more versions of the plugin moving forward, publishing a new version means adding a new `PluginSetup` contract into the this `PluginRepo` will contain all plugin versions
 
-[](https://goerli.etherscan.io/address/0x301868712b77744A3C0E5511609238399f0A2d4d#writeContract)
+You can do that through a few different ways:
 
-![Screen Shot 2023-04-18 at 10.54.35.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/c6f766d1-6a39-44fe-9000-8e37c880242d/Screen_Shot_2023-04-18_at_10.54.35.png)
+### a) Etherscan
+
+Go to the [`PluginFactory`](https://goerli.etherscan.io/address/0x301868712b77744A3C0E5511609238399f0A2d4d#writeContract) contract on Etherscan and deploy the first version of your plugin.
+
+![Register your Plugin through Etherscan](https://res.cloudinary.com/dacofvu8m/image/upload/v1682466427/Screen_Shot_2023-04-25_at_19.46.58_nlo9p1.png)
+
+### b) Publishing script
+
+You can also publish your Plugin through using a `publish` script.
+
+1. Create the `publish.ts` file within your `scripts` folder.
+
+```bash
+touch scripts/publish.ts
+```
+
+2. Add this publishing script to the `publish.ts` file. 
+ 
+This will get the `PluginRepoFactory` contract and call on its `createPluginRepoWithFirstVersion` to create the plugin's `PluginRepo` instance, where plugin versions will be stored.
+
+```ts
+import {
+  PluginRepoFactory__factory,
+  PluginRepoRegistry__factory,
+  PluginRepo__factory,
+} from '@aragon/osx-ethers';
+import {DeployFunction} from 'hardhat-deploy/types';
+import {HardhatRuntimeEnvironment} from 'hardhat/types';
+
+const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  const {deployments, network} = hre;
+  const [deployer] = await hre.ethers.getSigners();
+  
+  const pluginRepoFactoryAddr = '0x301868712b77744A3C0E5511609238399f0A2d4d';
+
+  const pluginRepoFactory = PluginRepoFactory__factory.connect(
+    pluginRepoFactoryAddr,
+    deployer
+  );
+
+  const pluginName = 'greeter-plugin';
+  const pluginSetupContractName = 'GreeterPluginSetup';
+
+  const pluginSetupContract = await deployments.get(pluginSetupContractName);
+
+  const tx = await pluginRepoFactory.createPluginRepoWithFirstVersion(
+    pluginName,
+    pluginSetupContract.address,
+    deployer.address,
+    '0x00',
+    '0x00'
+  );
+
+  console.log(`You can find the transaction address which published the ${pluginName} Plugin here: ${tx}`);
+};
+
+export default func;
+```
+
+In order to run the script and finalize the publishing, run this in your terminal:
+
+```bash
+npx hardhat run scripts/publish.ts
+```
+
+### Testing
 
 4. Make sure it works by calling on the `getPlugins()` query in our [subgraph](https://subgraph.satsuma-prod.com/aragon/osx-goerli/playground) and hit "Play".
 
