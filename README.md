@@ -74,7 +74,7 @@ pragma solidity 0.8.17;
 import {Plugin, IDAO} from "@aragon/osx/core/plugin/Plugin.sol";
 
 contract GreeterPlugin is Plugin {
-  // Permissions are what enables
+  // Permissions are what connects everything together. Addresses who have been granted the GREET_PERMISSION will be able to call on functions with the modifier `auth(GREET_PERMISSION_ID)`. These will be granted in the PluginSetup.sol contract up next.
   bytes32 public constant GREET_PERMISSION_ID = keccak256("GREET_PERMISSION");
 
   constructor(IDAO _dao) Plugin(_dao) {}
@@ -132,7 +132,7 @@ contract GreeterPluginSetup is PluginSetup {
       where: _payload.plugin,
       who: _dao,
       condition: PermissionLib.NO_CONDITION,
-      permissionId: keccak256("GRANT_PERMISSION")
+      permissionId: keccak256("GREET_PERMISSION")
     });
   }
 
